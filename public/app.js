@@ -1,3 +1,28 @@
+async function loadBookmarks() {
+    const container = document.getElementById('resultsContainer');
+    try {
+        const response = await fetch('/bookmarks');
+        const data = await response.json();
+        
+        if (data.data.length === 0) {
+            container.innerHTML = '<p>No bookmarks saved yet.</p>';
+            return;
+        }
+
+        container.innerHTML = data.data.map(bookmark => `
+            <div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 10px;">
+                <h3 style="margin: 0 0 5px 0;"><a href="${bookmark.url}" target="_blank">${bookmark.title}</a></h3>
+                <p style="margin: 0 0 5px 0;">${bookmark.description || 'No description'}</p>
+                <small style="color: #555;">Tags: ${bookmark.tags || 'None'}</small>
+            </div>
+        `).join('');
+    } catch (error) {
+        container.innerHTML = '<p style="color: red;">Failed to load bookmarks.</p>';
+    }
+}
+
+loadBookmarks();
+
 document.getElementById('bookmarkForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     

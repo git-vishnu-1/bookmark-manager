@@ -79,6 +79,26 @@ app.post('/bookmarks/:id/tags', async (req, res) => {
     }
 });
 
+app.get('/bookmarks', async (req, res) => {
+    try {
+        const query = `
+            SELECT b.id, b.url, b.title, b.description, 
+                   GROUP_CONCAT(t.name) AS tags
+            FROM bookmarks b
+            LEFT JOIN bookmark_tags bt ON b.id = bt.bookmark_id
+            LEFT JOIN tags t ON bt.tag_id = t.id
+            GROUP BY b.id
+            ORDER BY b.created_at DESC
+            LIMIT 50
+        `;
+        const [rows] = await pool.query(query);
+        res.status(200).json({ data: rows });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Failed to fetch bookmarks' });
+    }
+});
+
 app.get('/bookmarks/search', async (req, res) => {
     const searchQuery = req.query.q;
 
