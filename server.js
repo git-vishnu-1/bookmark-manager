@@ -3,6 +3,7 @@ const app = express();
 const pool = require('./db');
 
 app.use(express.json());
+app.use(express.static('public'));
 
 app.get('/health', async (req, res) => {
     try {
