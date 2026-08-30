@@ -78,6 +78,36 @@ app.post('/bookmarks/:id/tags', async (req, res) => {
     }
 });
 
+app.get('/bookmarks/search', async (req, res) => {
+    const searchQuery = req.query.q;
+
+    if (!searchQuery) {
+        return res.status(400).json({ error: 'Search query parameter (?q=) is required.' });
+    }
+
+    try {
+        const query = `
+            SELECT b.id, b.url, b.title, b.description, 
+                   GROUP_CONCAT(t.name) AS tags
+            FROM bookmarks b
+            LEFT JOIN bookmark_tags bt ON b.id = bt.bookmark_id
+            LEFT JOIN tags t ON bt.tag_id = t.id
+            WHERE MATCH(b.title, b.description) AGAINST(? IN NATURAL LANGUAGE MODE)
+            GROUP BY b.id
+        `;
+        
+        const [rows] = await pool.query(query, [searchQuery]);
+        
+        res.status(200).json({
+            results: rows.length,
+            data: rows
+        });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Search failed' });
+    }
+});
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
